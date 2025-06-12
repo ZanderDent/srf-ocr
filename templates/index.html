@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Set the character encoding for the document -->
+    <meta charset="UTF-8">
+    <!-- Set the title of the page as it appears in the browser tab -->
+    <title>SRF OCR Tool</title>
+    <!-- Link to the favicon (icon in the browser tab), served from the static folder -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <!-- Link to the external CSS stylesheet for page styling -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- Import the xlsx library for exporting data as Excel files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Import the docx library for exporting data as Word documents -->
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+</head>
+<body>
+    <!-- Display the SRF logo at the top of the page, loaded from the static folder -->
+    <img src="{{ url_for('static', filename='logo.jpg') }}" alt="SRF Logo" style="height:60px; margin-bottom:1em;">
+    <!-- Main heading for the tool -->
+    <h1>SRF OCR Tool</h1>
+    <!-- Drag-and-drop area for PDF uploads -->
+    <div class="drop-area" id="drop-area">
+        <!-- File input is hidden; button triggers file selection dialog -->
+        <p>
+            Drag & drop PDF here or 
+            <input type="file" id="fileElem" accept="application/pdf" style="display:none">
+            <button onclick="document.getElementById('fileElem').click()">Browse</button>
+        </p>
+    </div>
+    <!-- Camera upload area for capturing images using the device camera -->
+    <div class="camera-area">
+        <!-- Button to start the camera stream -->
+        <button onclick="startCamera()">Use Camera</button>
+        <!-- Video element to display the live camera stream (hidden by default) -->
+        <video id="video" width="320" height="240" autoplay style="display:none;"></video>
+        <!-- Button to capture a frame from the camera (hidden by default) -->
+        <button id="snap" style="display:none;">Capture</button>
+        <!-- Canvas to display the captured image (hidden by default) -->
+        <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+    </div>
+    <!-- Div to display the OCR result text -->
+    <div id="ocr-result"></div>
+    <!-- Export buttons for Excel, CSV, and Word formats (hidden until OCR result is available) -->
+    <div class="export-btns" style="display:none;">
+        <button onclick="exportExcel()">Export as Excel</button>
+        <button onclick="exportCSV()">Export as CSV</button>
+        <button onclick="exportWord()">Export as Word</button>
+    </div>
+    <script>
+        // Array to store the OCR result lines
+        let ocrLines = [];
+
+        // --- Drag and Drop Functionality ---
+
+        // Get the drop area element by its ID
+        const dropArea = document.getElementById('drop-area');
+        // When a file is dragged over the drop area, prevent default and highlight the area
+        dropArea.addEventListener('dragover', e => {
+            e.preventDefault(); // Prevent default browser behavior (e.g., opening the file)
+            dropArea.classList.add('dragover'); // Add a CSS class for visual feedback
+        });
+        // When the dragged file leaves the drop area, remove the highlight
+        dropArea.addEventListener('dragleave', e => {
+            e.preventDefault();
+            dropArea.classList.remove('dragover');
+        });
+        // When a file is dropped onto the drop area
+        dropArea.addEventListener('drop', e => {
+            e.preventDefault();
+            dropArea.classList.remove('dragover');
+            // Get the first file from the dropped files
+            const file = e.dataTransfer.files[0];
+            // Pass the file to the handler function
+            handleFile(file);
+        });
+        // When a file is selected using the file input dialog
+        document.getElementById('fileElem').addEventListener('change', e => {
+            // Get the first file from the input
+            const file = e.target.files[0];
+            // Pass the file to the handler function
+            handleFile(file);
+        });
+
+        // Handle file uploads (either from drag-and-drop or file input)
+        function handleFile(file) {
+            if (!file) return; // If no file, do nothing
+            // Create a FormData object to send the file to the backend
+            const formData = new FormData();
+            formData.append('file', file);
+            // Send the file to the /api/ocr endpoint using POST
+            fetch('/api/ocr', { method: 'POST', body: formData })
+                .then(res => res.json()) // Parse the JSON response
+                .then(data => showResult(data.lines)); // Display the OCR result
+        }
+
+        // --- Camera Functionality ---
+
+        // Start the camera and display the video stream
+        function startCamera() {
+            const video = document.getElementById('video');
+            const snap = document.getElementById('snap');
+            video.style.display = 'block'; // Show the video element
+            snap.style.display = 'inline-block'; // Show the capture button
+            // Request access to the user's camera
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => { video.srcObject = stream; }); // Set the video source to the camera stream
+        }
+        // When the capture button is clicked, take a snapshot from the video
+        document.getElementById('snap').onclick = function() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            canvas.style.display = 'block'; // Show the canvas
+            // Draw the current frame from the video onto the canvas
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            // Stop all video tracks to turn off the camera
+            video.srcObject.getTracks().forEach(track => track.stop());
+            video.style.display = 'none'; // Hide the video element
+            this.style.display = 'none'; // Hide the capture button
+            // For the mock, just send a blank POST request to /api/ocr
+            fetch('/api/ocr', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => showResult(data.lines));
+        };
+
+        // --- Display OCR Result ---
+
+        // Display the OCR result lines in the result div and show export buttons
+        function showResult(lines) {
+            ocrLines = lines; // Store the lines globally
+            // Join the lines with newlines and display in the result div
+            document.getElementById('ocr-result').textContent = lines.join('\n');
+            // Show the export buttons
+            document.querySelector('.export-btns').style.display = 'block';
+        }
+
+        // --- Export Functions ---
+
+        // Export the OCR result as an Excel file (.xlsx)
+        function exportExcel() {
+            // Convert the lines array to a worksheet (each line in a new row)
+            const ws = XLSX.utils.aoa_to_sheet(ocrLines.map(line => [line]));
+            // Create a new workbook and append the worksheet
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "OCR Result");
+            // Trigger the download of the Excel file
+            XLSX.writeFile(wb, "ocr_result.xlsx");
+        }
+
+        // Export the OCR result as a CSV file
+        function exportCSV() {
+            // Join the lines with newlines to form CSV content
+            const csv = ocrLines.join('\n');
+            // Create a Blob from the CSV string
+            const blob = new Blob([csv], { type: 'text/csv' });
+            // Create a temporary URL for the Blob
+            const url = URL.createObjectURL(blob);
+            // Create a temporary anchor element to trigger the download
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ocr_result.csv';
+            a.click(); // Trigger the download
+            URL.revokeObjectURL(url); // Clean up the URL object
+        }
+
+        // Export the OCR result as a Word document (.docx)
+        function exportWord() {
+            // Destructure required classes from the docx library
+            const { Document, Packer, Paragraph, TextRun } = window.docx;
+            // Create a new Word document with one section
+            const doc = new Document({
+                sections: [{
+                    properties: {},
+                    // Each OCR line becomes a new paragraph with spacing after
+                    children: ocrLines.map(line =>
+                        new Paragraph({
+                            children: [new TextRun(line)],
+                            spacing: { after: 120 } // Add space after each paragraph
+                        })
+                    )
+                }]
+            });
+            // Generate a Blob from the document and trigger the download
+            Packer.toBlob(doc).then(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ocr_result.docx';
+                a.click(); // Trigger the download
+                URL.revokeObjectURL(url); // Clean up the URL object
+            });
+        }
+    </script>
+</body>
+</html>

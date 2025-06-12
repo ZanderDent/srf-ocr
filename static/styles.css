@@ -1,0 +1,156 @@
+/* 
+SRF OCR Tool Stylesheet
+This file contains all the styles for the OCR tool frontend.
+Each section is commented for clarity and maintainability.
+*/
+
+/* ----- Base Page Styles ----- */
+body {
+    font-family: 'Segoe UI', Arial, sans-serif; /* Use a modern, readable font */
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #e3f2fd 0%, #f4f6f8 100%);
+    min-height: 100vh;
+    color: #222;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ----- Header Styles ----- */
+h1 {
+    color: #0B80C5;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    letter-spacing: 1px;
+    font-size: 2.2em;
+    font-weight: 700;
+    text-shadow: 0 2px 8px #e3f2fd;
+}
+
+/* ----- Logo Styles ----- */
+img[alt="SRF Logo"] {
+    display: block;
+    margin: 2em auto 1em auto;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,123,255,0.08);
+    background: #fff;
+    padding: 0.5em 1em;
+}
+
+/* ----- Drag-and-Drop Upload Area ----- */
+.drop-area {
+    border: 2.5px dashed #0B80C5;
+    border-radius: 12px;
+    padding: 2.5em 2em;
+    text-align: center;
+    color: #0B80C5;
+    margin-bottom: 2em;
+    background: #fff;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 12px rgba(0,123,255,0.04);
+    max-width: 420px;
+    width: 100%;
+}
+.drop-area.dragover {
+    background: #e3f2fd;
+    border-color: #0B80C5;
+    box-shadow: 0 4px 24px rgba(0,123,255,0.10);
+}
+.drop-area button {
+    margin-left: 0.5em;
+    background: #0B80C5;
+    color: #fff;
+    border: none;
+    padding: 0.4em 1.1em;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background 0.2s;
+}
+.drop-area button:hover {
+    background: #0a6aa1;
+}
+
+/* ----- Camera Upload Area ----- */
+.camera-area {
+    margin-bottom: 2em;
+    text-align: center;
+}
+.camera-area button {
+    background: #28a745;
+    color: #fff;
+    border: none;
+    padding: 0.4em 1.1em;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-bottom: 0.5em;
+    transition: background 0.2s;
+}
+.camera-area button:hover {
+    background: #1e7e34;
+}
+#video, #canvas {
+    display: block;
+    margin: 1em auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid #e0e0e0;
+}
+
+/* ----- OCR Result Display ----- */
+#ocr-result {
+    margin-top: 2em;
+    white-space: pre-line; /* Preserve line breaks */
+    background: #f8f9fa;
+    padding: 1.5em 1em;
+    border-radius: 10px;
+    min-height: 60px;
+    border: 1px solid #e0e0e0;
+    max-width: 600px;
+    width: 100%;
+    font-size: 1.1em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    color: #333;
+}
+
+/* ----- Export Buttons ----- */
+.export-btns {
+    margin-top: 1.5em;
+    text-align: center;
+}
+.export-btns button {
+    margin-right: 1em;
+    background: #0B80C5;
+    color: #fff;
+    border: none;
+    padding: 0.6em 1.5em;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.06);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.export-btns button:last-child {
+    margin-right: 0;
+}
+.export-btns button:hover {
+    background: #0a6aa1;
+    box-shadow: 0 4px 16px rgba(0,123,255,0.12);
+}
+
+/* ----- Responsive Design ----- */
+@media (max-width: 700px) {
+    .drop-area, #ocr-result {
+        max-width: 95vw;
+        padding: 1.2em 0.5em;
+    }
+    h1 {
+        font-size: 1.4em;
+    }
+    img[alt="SRF Logo"] {
+        height: 40px !important;
+    }
+}
