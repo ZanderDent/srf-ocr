@@ -3,23 +3,10 @@
   "builds": [
     {
       "src": "app.py",
-      "use": "@vercel/python",
-      "config": { 
-        "runtime": "python3.9",
-        "maxLambdaSize": "15mb",
-        "includeFiles": [
-          "templates/**",
-          "static/**",
-          "*.py"
-        ]
-      }
+      "use": "@vercel/python"
     }
   ],
   "routes": [
-    {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
-    },
     {
       "src": "/(.*)",
       "dest": "app.py"
