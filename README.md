@@ -1,5 +1,10 @@
 # SRF OCR Tool
 
+**DEMO VIDEO:**  
+[https://youtu.be/9CDuV0Dphu4](https://youtu.be/9CDuV0Dphu4)
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/9CDuV0Dphu4?si=KFb5Yk0NXrLJsOJQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 **SRF OCR Tool** is a modern, enterprise-grade web application for extracting text from PDFs and images using advanced OCR models. It features a drag-and-drop interface, camera capture, and export to Excel, CSV, and Word. The backend leverages Microsoft’s TrOCR for handwritten images and MarkItDown for document conversion.
 
 ---
