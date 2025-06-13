@@ -1,6 +1,6 @@
 # SRF OCR Tool
 
-> **Please Note:** This is not yet deployed and the OCR engines we’ve tried aren’t great at handwriting. They extract printed text well, but for more accurate handwritten transcription, consider purchasing a license of [Handwriting OCR](https://www.handwritingocr.com/) and integrating their API.
+> **Please Note:** This is not yet deployed and the OCR engines I’ve tried aren’t great at handwriting. They extract printed text well, but for more accurate handwritten transcription, consider purchasing a license of [Handwriting OCR](https://www.handwritingocr.com/) and integrating their API.
 
 **DEMO VIDEO:**  
 [![Watch the demo](https://i.ytimg.com/vi/9CDuV0Dphu4/maxresdefault.jpg)](https://youtu.be/9CDuV0Dphu4)
