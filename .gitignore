@@ -1,0 +1,12 @@
+/venv
+.venv
+*.pyc
+__pycache__/
+/*.pkl
+*.h5
+*.onnx
+*.dylib
+*.so
+*.zip
+*.tar
+*.tar.gz
