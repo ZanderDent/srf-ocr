@@ -99,20 +99,68 @@ img[alt="SRF Logo"] {
     border: 1px solid #e0e0e0;
 }
 
-/* ----- OCR Result Display ----- */
-#ocr-result {
-    margin-top: 2em;
-    white-space: pre-line; /* Preserve line breaks */
-    background: #f8f9fa;
-    padding: 1.5em 1em;
-    border-radius: 10px;
-    min-height: 60px;
-    border: 1px solid #e0e0e0;
+/* ----- OCR Result Container & Display ----- */
+#ocr-result-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 2em auto 0 auto;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 2em 1.5em;
+    box-shadow: 0 2px 12px rgba(30, 64, 175, 0.06);
+    min-height: 120px;
     max-width: 600px;
     width: 100%;
+    position: relative;
+    transition: box-shadow 0.2s;
+}
+
+#ocr-result {
+    width: 100%;
+    min-height: 60px;
+    white-space: pre-line;
+    font-family: 'Fira Mono', 'Consolas', monospace;
+    font-size: 1.08rem;
+    color: #222;
+    margin-bottom: 1.2rem;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#ocr-result:empty::before {
+    content: "Your OCR results will appear here.";
+    color: #b0b8c1;
     font-size: 1.1em;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    color: #333;
+    font-style: italic;
+    letter-spacing: 0.5px;
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 2em 0;
+}
+
+/* Loading Bar Styles */
+#loading-bar {
+    width: 100%;
+    background: #e0e7ef;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1.2em 0 0 0;
+    height: 22px;
+    box-shadow: 0 1px 4px rgba(30, 64, 175, 0.08);
+    display: none;
+    position: relative;
+}
+#loading-progress {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #1a73e8 0%, #4caf50 100%);
+    transition: width 0.3s cubic-bezier(.4,2.3,.3,1);
+    border-radius: 8px 0 0 8px;
 }
 
 /* ----- Export Buttons ----- */
@@ -143,7 +191,7 @@ img[alt="SRF Logo"] {
 
 /* ----- Responsive Design ----- */
 @media (max-width: 701px) {
-    .drop-area, #ocr-result {
+    .drop-area, #ocr-result-container {
         max-width: 95vw;
         padding: 1.2em 0.5em;
     }
