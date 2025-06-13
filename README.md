@@ -23,3 +23,66 @@
 
 ## Repository Structure
 
+```
+srf-ocr/
+│
+├── app.py                  # Flask backend, OCR API, TrOCR & MarkItDown integration
+├── requirements.txt        # Python dependencies
+│
+├── static/
+│   ├── styles.css          # Main CSS for frontend
+│   └── favicon.ico         # App favicon
+│
+├── templates/
+│   └── index.html          # Main frontend HTML
+│
+├── README.md               # Project documentation
+```
+
+---
+
+## Frontend Overview
+
+- **index.html**:  
+  - Drag-and-drop area for PDFs
+  - Camera capture for images
+  - Results container with loading bar and placeholder
+  - Export buttons for Excel, CSV, Word
+
+- **styles.css**:  
+  - Modern, accessible, and responsive design
+  - Centered results container and loading bar
+  - Consistent branding and color palette
+
+---
+
+## Backend Overview
+
+- **app.py**:
+  - `/api/ocr` endpoint accepts file uploads
+  - Uses TrOCR for handwritten images (JPG, PNG, etc.)
+  - Uses MarkItDown for PDFs and other supported documents
+  - Returns extracted text as a list of lines (JSON)
+
+- **Dependencies**:
+  - `flask`, `flask-cors`: Web server and CORS
+  - `transformers`, `torch`, `pillow`: TrOCR OCR pipeline
+  - `markitdown[all]`: Document conversion and OCR
+
+---
+
+## API Reference
+
+### `POST /api/ocr`
+
+- **Request:**  
+  `multipart/form-data` with a `file` field
+
+- **Response:**  
+  ```json
+  { "lines": ["Extracted text line 1", "Extracted text line 2", ...] }
+  ```
+
+- **Error Handling:**  
+  - Returns `400` if no file is uploaded  
+  - Returns `500` on processing error
