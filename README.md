@@ -1,6 +1,6 @@
 # SRF OCR Tool
 
-A Flask-based web application for Optical Character Recognition (OCR) using the OpenAI Vision API (e.g. GPT-3.5-turbo with vision capabilities). Supports image uploads (PNG, JPG, JPEG, GIF, WebP), camera capture, and multi-page PDF processing. Displays live logs and extracts **only** the text. Provides export to Excel, CSV, and Word formats.
+A Flask-based web application for Optical Character Recognition (OCR) using the OpenAI Vision API (e.g. GPT-4o with vision capabilities). Supports image uploads (PNG, JPG, JPEG, GIF, WebP), camera capture, and multi-page PDF processing. Displays live logs in a dedicated panel and extracts **only** the text. Provides export to Excel, CSV, and Word formats.
 
 ---
 
@@ -8,8 +8,8 @@ A Flask-based web application for Optical Character Recognition (OCR) using the 
 
 * **Image Upload**: Drag & drop or browse to upload image files.
 * **Camera Capture**: Snap a photo directly in the browser.
-* **PDF Support**: Convert each PDF page to an image and OCR each page.
-* **Live Logs**: View backend processing steps (image load, page conversions, OpenAI requests) in the UI.
+* **PDF Support**: Convert each PDF page to an image and OCR each page—this ensures proper processing for any embedded images within each PDF.
+* **Collapsible Logs Panel**: All backend JSON requests and responses (including logs) are shown in a dedicated, toggleable panel on the input page. Logs are **not** shown in the results area.
 * **Clean Text Output**: Instructs OpenAI to return *only* extracted text (no markdown or explanations).
 * **Export Options**: Download OCR result as Excel (.xlsx), CSV (.csv), or Word (.docx).
 * **Do Another Conversion**: Reset UI for multiple uses without page reload.
@@ -49,14 +49,17 @@ A Flask-based web application for Optical Character Recognition (OCR) using the 
    pip install -r requirements.txt
    ```
 
-   *`requirements.txt` should include:*
+   *`requirements.txt` includes:*
 
    ```text
-   Flask
+   flask
    flask-cors
    openai
    pdf2image
    pillow
+   transformers
+   torch
+   python-dotenv
    ```
 
 ---
@@ -118,19 +121,19 @@ python app.py
 5. **Image to Data URL** → Base64 in-memory.
 6. **OpenAI Vision Call**:
 
-   * System prompt: \_"Extract and return only the text..."
+   * System prompt: _"Extract and return only the text..."_
    * User message with image URL.
    * Collects response text per page.
 7. **Concatenate & Return**:
 
    * JSON payload: `{ description: "...", logs: [ ... ] }`.
-   * Frontend dumps `logs` and shows `description` in the UI.
+   * Frontend dumps `logs` in the collapsible logs panel and shows `description` in the results area.
 
 ---
 
 ## Troubleshooting
 
-* **429 insufficient\_quota**: Ensure your **Organization budget** is not hit. Raise or disable in OpenAI Dashboard → Billing → Usage limits.
+* **429 insufficient_quota**: Ensure your **Organization budget** is not hit. Raise or disable in OpenAI Dashboard → Billing → Usage limits.
 * **401 missing scopes**: Regenerate API key with **Full access** or add `model.request` & `chat.completions.create` scopes.
 * **pdf2image errors**: Confirm Poppler is installed and on your PATH.
 
