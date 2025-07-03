@@ -1,7 +1,15 @@
 {
-  "version": 2,
-  "routes": [
-    { "src": "/api/ocr", "dest": "app.py" },
-    { "src": "/(.*)",     "dest": "/templates/index.html" }
-  ]
-}
+    "version": 2,
+    "builds": [
+      {
+        "src": "app.py",
+        "use": "@vercel/python"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "app.py"
+      }
+    ]
+  }
