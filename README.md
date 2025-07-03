@@ -19,12 +19,6 @@ A Flask-based web application for Optical Character Recognition (OCR) using the 
 ## Prerequisites
 
 1. **Python 3.8+**
-2. **Poppler** (for PDF → image conversion):
-
-   * macOS: `brew install poppler`
-   * Ubuntu/Debian: `sudo apt-get install poppler-utils`
-3. **Node.js** is *not* required—frontend runs as static HTML/JS in the Flask app.
-
 ---
 
 ## Installation
@@ -60,6 +54,7 @@ A Flask-based web application for Optical Character Recognition (OCR) using the 
    transformers
    torch
    python-dotenv
+   PyMuPDF
    ```
 
 ---
