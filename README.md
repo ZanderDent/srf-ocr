@@ -66,12 +66,10 @@ A Flask-based web application for Optical Character Recognition (OCR) using the 
 
 ## Configuration
 
-The app uses environment variables for API credentials and organization context:
+The app uses environment variables for API credentials and organization context. You can set these in a `.env` file or in your shell profile:
 
 * `OPENAI_API_KEY` — Your OpenAI secret key with `model.request` and `chat.completions.create` scopes.
 * `OPENAI_ORGANIZATION` — (Optional) The OpenAI Organization ID if you belong to multiple orgs.
-
-Example:
 
 ```bash
 export OPENAI_API_KEY="sk-..."
@@ -121,7 +119,7 @@ python app.py
 5. **Image to Data URL** → Base64 in-memory.
 6. **OpenAI Vision Call**:
 
-   * System prompt: _"Extract and return only the text..."_
+   * System prompt: *"Extract and return only the text..."*
    * User message with image URL.
    * Collects response text per page.
 7. **Concatenate & Return**:
@@ -133,7 +131,7 @@ python app.py
 
 ## Troubleshooting
 
-* **429 insufficient_quota**: Ensure your **Organization budget** is not hit. Raise or disable in OpenAI Dashboard → Billing → Usage limits.
+* **429 insufficient\_quota**: Ensure your **Organization budget** is not hit. Raise or disable in OpenAI Dashboard → Billing → Usage limits.
 * **401 missing scopes**: Regenerate API key with **Full access** or add `model.request` & `chat.completions.create` scopes.
 * **pdf2image errors**: Confirm Poppler is installed and on your PATH.
 
@@ -141,4 +139,4 @@ python app.py
 
 ## License
 
-MIT © Your Organization
+MIT © SRF Consulting Inc.
