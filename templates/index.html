@@ -155,11 +155,22 @@
     <img src="{{ url_for('static', filename='logo.jpg') }}" alt="SRF Logo" style="height:60px; margin-bottom:1em;">
     <!-- Main heading for the tool -->
     <h1>SRF OCR Tool</h1>
+    <!-- Add a collapsible logs panel above the main area -->
+    <div id="logs-panel" style="max-width:700px;margin:1.5rem auto 0 auto;background:#f8fafc;border-radius:8px;padding:1rem 1.5rem;box-shadow:0 2px 8px rgba(30,64,175,0.04);display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-weight:600;font-size:1.1rem;">Logs</span>
+        <button id="toggle-logs-btn" style="background:#1a73e8;color:#fff;border:none;border-radius:6px;padding:0.3rem 1rem;font-size:0.95rem;cursor:pointer;">Hide</button>
+      </div>
+      <pre id="logs-content" style="margin:0.7em 0 0 0;font-size:0.98em;max-height:220px;overflow:auto;background:#f3f6fa;border-radius:6px;padding:0.7em 1em;"></pre>
+    </div>
+    <div style="max-width:700px;margin:0 auto 1.5rem auto;text-align:right;">
+      <button id="show-logs-btn" style="background:#1a73e8;color:#fff;border:none;border-radius:6px;padding:0.3rem 1rem;font-size:0.95rem;cursor:pointer;">Show Logs</button>
+    </div>
     <!-- Drag-and-drop area for PDF uploads -->
     <div class="drop-area" id="drop-area">
         <p>
-            Drag & drop PDF here or 
-            <input type="file" id="fileElem" accept="application/pdf" style="display:none">
+            Drag & drop image here or 
+            <input type="file" id="fileElem" accept="application/pdf,image/png,image/jpeg,image/jpg,image/webp,image/gif" style="display:none">
             <button id="browse-btn" onclick="document.getElementById('fileElem').click()">Browse</button>
         </p>
     </div>
@@ -171,11 +182,11 @@
     </div>
     <!-- Div to display the OCR result text -->
     <div id="ocr-result-container">
-        <div id="loading-bar" style="display:none; width:100%; background:#eee; margin-top:10px;">
-          <div id="loading-progress" style="width:0%; height:20px; background:#4caf50; transition: width 0.2s;"></div>
+        <div id="loading-bar" style="display:none;">
+          <div id="loading-progress"></div>
         </div>
         <div id="ocr-result"></div>
-        <!-- Loading bar element, now inside the results container -->
+        <div id="ocr-log" style="color:#888;font-size:0.98em;margin-top:0.5em;min-height:1.5em;text-align:center;"></div>
     </div>
     <!-- Export buttons for Excel, CSV, and Word formats (hidden until OCR result is available) -->
     <div class="export-btns" style="display:none;">
@@ -189,8 +200,14 @@
         </button>
     </div>
     <script>
-        // Array to store the OCR result lines
+        // --- Declare shared variables ONCE at the top ---
         let ocrLines = [];
+        let loadingInterval = null;
+        let loadingStartTime = null;
+        let estimatedDuration = 3000; // fallback duration in ms
+
+        // Get the drop area element by its ID (declare once)
+        const dropArea = document.getElementById('drop-area');
 
         // --- Display OCR Result ---
 
@@ -206,10 +223,6 @@
         }
 
         // --- Loading Bar with Estimated Time ---
-
-        let loadingInterval = null;
-        let loadingStartTime = null;
-        let estimatedDuration = 3000; // fallback duration in ms
 
         function showLoadingBarWithEstimate(fileSize) {
             // Estimate duration: 1s base + 1s per 2MB (tweak as needed)
@@ -228,6 +241,19 @@
             }, 100);
         }
 
+        function showLoadingBar() {
+          document.getElementById('loading-bar').style.display = 'block';
+          document.getElementById('loading-progress').style.width = '0%';
+          // Simulate progress (for demo; replace with real progress if available)
+          let progress = 0;
+          loadingInterval = setInterval(() => {
+            if (progress < 90) {
+              progress += 10;
+              document.getElementById('loading-progress').style.width = progress + '%';
+            }
+          }, 200);
+        }
+
         function hideLoadingBar() {
             clearInterval(loadingInterval);
             document.getElementById('loading-progress').style.width = '100%';
@@ -239,8 +265,6 @@
 
         // --- Drag and Drop Functionality ---
 
-        // Get the drop area element by its ID
-        const dropArea = document.getElementById('drop-area');
         // When a file is dragged over the drop area, prevent default and highlight the area
         dropArea.addEventListener('dragover', e => {
             e.preventDefault(); // Prevent default browser behavior (e.g., opening the file)
@@ -268,24 +292,57 @@
             handleFile(file);
         });
 
-        // Handle file uploads (either from drag-and-drop or file input)
+        // Logs panel logic
+        const logsPanel = document.getElementById('logs-panel');
+        const logsContent = document.getElementById('logs-content');
+        const showLogsBtn = document.getElementById('show-logs-btn');
+        const toggleLogsBtn = document.getElementById('toggle-logs-btn');
+
+        showLogsBtn.onclick = function() {
+          logsPanel.style.display = 'block';
+          showLogsBtn.style.display = 'none';
+        };
+        toggleLogsBtn.onclick = function() {
+          logsPanel.style.display = 'none';
+          showLogsBtn.style.display = 'inline-block';
+        };
+
+        function appendLog(msg) {
+          logsContent.textContent += msg + '\n';
+          logsContent.scrollTop = logsContent.scrollHeight;
+        }
+        function clearLogs() {
+          logsContent.textContent = '';
+        }
+
+        // --- Update handleFile to log JSON requests/responses ---
         function handleFile(file) {
-            if (!file) return; // If no file, do nothing
-            // Create a FormData object to send the file to the backend
+            if (!file) return;
             const formData = new FormData();
             formData.append('file', file);
-            // Show the loading bar with estimated time based on file size
             showLoadingBarWithEstimate(file.size);
-            // Send the file to the /api/ocr endpoint using POST
+            clearLogs();
+            appendLog('REQUEST: file=' + (file.name || 'blob') + ', size=' + file.size + ' bytes');
+
             fetch('/api/ocr', { method: 'POST', body: formData })
-                .then(res => res.json()) // Parse the JSON response
-                .then(data => {
-                    hideLoadingBar();
-                    showResult(data.lines); // Display the OCR result
-                })
-                .catch(() => {
-                    hideLoadingBar();
-                });
+              .then(res => res.json())
+              .then(data => {
+                hideLoadingBar();
+                // Log the full JSON response
+                appendLog('RESPONSE: ' + JSON.stringify(data, null, 2));
+                if (data.logs) {
+                  appendLog('BACKEND LOGS:\n' + data.logs.join('\n'));
+                }
+                // Display extracted text only
+                document.getElementById('ocr-result').textContent = data.description || data.error || "(no description)";
+                document.querySelector('.export-btns').style.display = 'block';
+                hideCaptureButtons();
+                showDoAnother();
+              })
+              .catch(err => {
+                hideLoadingBar();
+                appendLog('Error: ' + err);
+              });
         }
 
         // --- Camera Functionality ---
@@ -296,6 +353,7 @@
             const snap = document.getElementById('snap');
             video.style.display = 'block'; // Show the video element
             snap.style.display = 'inline-block'; // Show the capture button
+            logMessage("Camera started. Click 'Capture' to take a photo.");
             // Request access to the user's camera
             navigator.mediaDevices.getUserMedia({ video: true })
                 .then(stream => { video.srcObject = stream; }); // Set the video source to the camera stream
@@ -304,17 +362,16 @@
         document.getElementById('snap').onclick = function() {
             const video = document.getElementById('video');
             const canvas = document.getElementById('canvas');
-            canvas.style.display = 'block'; // Show the canvas
-            // Draw the current frame from the video onto the canvas
             canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            // Stop all video tracks to turn off the camera
             video.srcObject.getTracks().forEach(track => track.stop());
-            video.style.display = 'none'; // Hide the video element
-            this.style.display = 'none'; // Hide the capture button
-            // For the mock, just send a blank POST request to /api/ocr
-            fetch('/api/ocr', { method: 'POST' })
-                .then(res => res.json())
-                .then(data => showResult(data.lines));
+            video.style.display = 'none';
+            this.style.display = 'none';
+            showLoadingBar(); // Show loading bar for camera capture
+            canvas.toBlob(function(blob) {
+                clearLogs();
+                appendLog('REQUEST: camera capture, size=' + blob.size + ' bytes');
+                handleFile(blob);
+            }, 'image/png');
         };
 
         // --- Export Functions ---
@@ -374,35 +431,11 @@
             });
         }
 
-        // Example JavaScript for handling the loading bar
-
-        function showLoadingBar() {
-          document.getElementById('loading-bar').style.display = 'block';
-          document.getElementById('loading-progress').style.width = '0%';
-          // Simulate progress (for demo; replace with real progress if available)
-          let progress = 0;
-          window.loadingInterval = setInterval(() => {
-            if (progress < 90) {
-              progress += 10;
-              document.getElementById('loading-progress').style.width = progress + '%';
-            }
-          }, 200);
+        // On-screen log utility
+        function logMessage(msg) {
+            const logDiv = document.getElementById('ocr-log');
+            logDiv.textContent = msg;
         }
-
-        function hideLoadingBar() {
-          clearInterval(window.loadingInterval);
-          document.getElementById('loading-progress').style.width = '100%';
-          setTimeout(() => {
-            document.getElementById('loading-bar').style.display = 'none';
-            document.getElementById('loading-progress').style.width = '0%';
-          }, 500);
-        }
-
-        // When starting the upload/processing:
-        // showLoadingBar();
-
-        // When the response is received (success or error):
-        // hideLoadingBar();
 
         // Hide capture/upload buttons after first result, show "Do Another Conversion"
         function hideCaptureButtons() {
@@ -418,15 +451,6 @@
         }
         function hideDoAnother() {
             document.getElementById('do-another-container').style.display = 'none';
-        }
-
-        // Update showResult to hide capture/upload buttons and show "Do Another"
-        function showResult(lines) {
-            ocrLines = lines;
-            document.getElementById('ocr-result').textContent = lines.join('\n');
-            document.querySelector('.export-btns').style.display = 'block';
-            hideCaptureButtons();
-            showDoAnother();
         }
 
         // "Do Another Conversion" resets the UI
