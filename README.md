@@ -101,7 +101,6 @@ python app.py
 │   ├── logo.jpg
 │   └── favicon.ico
 ├── requirements.txt  # Python dependencies
-├── test.py           # Minimal OpenAI connectivity test
 └── README.md         # This file
 ```
 
