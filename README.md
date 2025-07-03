@@ -1,88 +1,141 @@
 # SRF OCR Tool
 
-> **Please Note:** This is not yet deployed and the OCR engines I’ve tried aren’t great at handwriting. They extract printed text well, but for more accurate handwritten transcription, consider purchasing a license of [Handwriting OCR](https://www.handwritingocr.com/) and integrating their API.
-
-**DEMO VIDEO:**  
-[![Watch the demo](https://i.ytimg.com/vi/9CDuV0Dphu4/maxresdefault.jpg)](https://youtu.be/9CDuV0Dphu4)
-
-**SRF OCR Tool** is a modern, enterprise-grade web application for extracting text from PDFs and images using advanced OCR models. It features a drag-and-drop interface, camera capture, and export to Excel, CSV, and Word. The backend leverages Microsoft’s TrOCR for handwritten images and MarkItDown for document conversion.
+A Flask-based web application for Optical Character Recognition (OCR) using the OpenAI Vision API (e.g. GPT-3.5-turbo with vision capabilities). Supports image uploads (PNG, JPG, JPEG, GIF, WebP), camera capture, and multi-page PDF processing. Displays live logs and extracts **only** the text. Provides export to Excel, CSV, and Word formats.
 
 ---
 
 ## Features
 
-- Drag-and-drop PDF upload  
-- Camera capture for handwritten notes and images  
-- Handwriting OCR with Microsoft TrOCR  
-- Document conversion with MarkItDown (PDF, Office, images, audio, and more)  
-- Export results as Excel, CSV, or Word  
-- Responsive, accessible UI  
-- Modular Python/Flask backend  
+* **Image Upload**: Drag & drop or browse to upload image files.
+* **Camera Capture**: Snap a photo directly in the browser.
+* **PDF Support**: Convert each PDF page to an image and OCR each page.
+* **Live Logs**: View backend processing steps (image load, page conversions, OpenAI requests) in the UI.
+* **Clean Text Output**: Instructs OpenAI to return *only* extracted text (no markdown or explanations).
+* **Export Options**: Download OCR result as Excel (.xlsx), CSV (.csv), or Word (.docx).
+* **Do Another Conversion**: Reset UI for multiple uses without page reload.
 
 ---
 
-## Repository Structure
+## Prerequisites
+
+1. **Python 3.8+**
+2. **Poppler** (for PDF → image conversion):
+
+   * macOS: `brew install poppler`
+   * Ubuntu/Debian: `sudo apt-get install poppler-utils`
+3. **Node.js** is *not* required—frontend runs as static HTML/JS in the Flask app.
+
+---
+
+## Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/your-org/srf-ocr-tool.git
+   cd srf-ocr-tool
+   ```
+
+2. **Create and activate a virtual environment**
+
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+3. **Install Python dependencies**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+   *`requirements.txt` should include:*
+
+   ```text
+   Flask
+   flask-cors
+   openai
+   pdf2image
+   pillow
+   ```
+
+---
+
+## Configuration
+
+The app uses environment variables for API credentials and organization context:
+
+* `OPENAI_API_KEY` — Your OpenAI secret key with `model.request` and `chat.completions.create` scopes.
+* `OPENAI_ORGANIZATION` — (Optional) The OpenAI Organization ID if you belong to multiple orgs.
+
+Example:
+
+```bash
+export OPENAI_API_KEY="sk-..."
+export OPENAI_ORGANIZATION="org-..."
+```
+
+---
+
+## Running the Application
+
+```bash
+# Ensure env vars are set
+python app.py
+```
+
+* The server starts on [http://127.0.0.1:5002](http://127.0.0.1:5002)
+* Visit that URL in your browser.
+
+---
+
+## Project Structure
 
 ```
-srf-ocr/
-│
-├── app.py                  # Flask backend, OCR API, TrOCR & MarkItDown integration
-├── requirements.txt        # Python dependencies
-│
-├── static/
-│   ├── styles.css          # Main CSS for frontend
-│   └── favicon.ico         # App favicon
-│
+├── app.py            # Flask backend
 ├── templates/
-│   └── index.html          # Main frontend HTML
-│
-├── README.md               # Project documentation
+│   └── index.html    # Main front-end template
+├── static/
+│   ├── styles.css
+│   ├── logo.jpg
+│   └── favicon.ico
+├── requirements.txt  # Python dependencies
+├── test.py           # Minimal OpenAI connectivity test
+└── README.md         # This file
 ```
 
 ---
 
-## Frontend Overview
+## How It Works
 
-- **index.html**:  
-  - Drag-and-drop area for PDFs
-  - Camera capture for images
-  - Results container with loading bar and placeholder
-  - Export buttons for Excel, CSV, Word
+1. **File / Camera Input** → `handleFile()` in `index.html` JavaScript.
+2. **Loading Bar** → Estimates upload/OCR time.
+3. **Upload to `/api/ocr`** → Flask endpoint reads file.
+4. **PDF Handling**:
 
-- **styles.css**:  
-  - Modern, accessible, and responsive design
-  - Centered results container and loading bar
-  - Consistent branding and color palette
+   * Uses `pdf2image.convert_from_bytes()` to render each page.
+   * Logs page render events.
+5. **Image to Data URL** → Base64 in-memory.
+6. **OpenAI Vision Call**:
 
----
+   * System prompt: \_"Extract and return only the text..."
+   * User message with image URL.
+   * Collects response text per page.
+7. **Concatenate & Return**:
 
-## Backend Overview
-
-- **app.py**:
-  - `/api/ocr` endpoint accepts file uploads
-  - Uses TrOCR for handwritten images (JPG, PNG, etc.)
-  - Uses MarkItDown for PDFs and other supported documents
-  - Returns extracted text as a list of lines (JSON)
-
-- **Dependencies**:
-  - `flask`, `flask-cors`: Web server and CORS
-  - `transformers`, `torch`, `pillow`: TrOCR OCR pipeline
-  - `markitdown[all]`: Document conversion and OCR
+   * JSON payload: `{ description: "...", logs: [ ... ] }`.
+   * Frontend dumps `logs` and shows `description` in the UI.
 
 ---
 
-## API Reference
+## Troubleshooting
 
-### `POST /api/ocr`
+* **429 insufficient\_quota**: Ensure your **Organization budget** is not hit. Raise or disable in OpenAI Dashboard → Billing → Usage limits.
+* **401 missing scopes**: Regenerate API key with **Full access** or add `model.request` & `chat.completions.create` scopes.
+* **pdf2image errors**: Confirm Poppler is installed and on your PATH.
 
-- **Request:**  
-  `multipart/form-data` with a `file` field
+---
 
-- **Response:**  
-  ```json
-  { "lines": ["Extracted text line 1", "Extracted text line 2", ...] }
-  ```
+## License
 
-- **Error Handling:**  
-  - Returns `400` if no file is uploaded  
-  - Returns `500` on processing error
+MIT © Your Organization
