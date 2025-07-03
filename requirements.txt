@@ -3,4 +3,6 @@ flask-cors
 transformers
 pillow
 torch
-markitdown[all]
+openai
+python-dotenv
+pdf2image
