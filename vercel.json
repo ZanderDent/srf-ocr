@@ -1,8 +1,7 @@
 {
-  "builds": [
-    { "src": "Dockerfile", "use": "@vercel/docker" }
-  ],
+  "version": 2,
   "routes": [
-    { "src": "/(.*)", "dest": "/" }
+    { "src": "/api/ocr", "dest": "app.py" },
+    { "src": "/(.*)",     "dest": "/templates/index.html" }
   ]
 }
